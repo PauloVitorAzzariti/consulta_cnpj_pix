@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta de CNPJs com PIX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; padding: 0; background-color: #000; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    header { padding: 20px; text-align: center; font-size: 24px; background-color: #111; width: 100%; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #222; }
+    .container { padding: 20px; max-width: 600px; width: 100%; }
+    textarea { width: 100%; height: 200px; margin-bottom: 10px; padding: 10px; font-size: 16px; background-color: #111; color: #0f0; border: 1px solid #333; resize: none; }
+    button { padding: 12px 20px; background-color: #0f0; color: #000; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-right: 10px; }
+    button:hover { background-color: #0c0; }
+    #resultado { white-space: pre-wrap; background-color: #111; border: 1px solid #333; padding: 10px; margin-top: 20px; color: #0f0; }
+  </style>
+</head>
+<body>
+  <header>Consulta de CNPJs com PIX</header>
+  <div class="container">
+    <form id="consultaForm">
+      <textarea id="cnpjs" placeholder="Cole aqui os CNPJs separados por quebra de linha..."></textarea>
+      <div>
+        <button type="submit">Consultar</button>
+        <button type="button" onclick="salvarPDF()">Salvar PDF</button>
+      </div>
+    </form>
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("consultaForm");
+    const resultado = document.getElementById("resultado");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      resultado.textContent = "Consultando...";
+      const cnpjs = document.getElementById("cnpjs").value;
+
+      const response = await fetch("/consultar", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({cnpjs})
+      });
+
+      const data = await response.text();
+      resultado.textContent = data;
+    });
+
+    async function salvarPDF() {
+      const response = await fetch("/gerar_pdf");
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "resultados_pix.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        alert("Erro ao gerar PDF.");
+      }
+    }
+  </script>
+</body>
+</html>
